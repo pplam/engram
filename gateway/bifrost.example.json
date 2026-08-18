@@ -1,0 +1,92 @@
+{
+  "_comment": [
+    "TEMPLATE. Copy to `gateway/bifrost.json` (gitignored) and add the providers your",
+    "suite pins:",
+    "",
+    "  cp gateway/bifrost.example.json gateway/bifrost.json",
+    "",
+    "Bifrost config for the benchmark's model plane (D5, ARCH §3, §6.1). Every LLM and",
+    "embedder call — harness and system under test alike — goes through here. Model pinning",
+    "is enforced per virtual key via provider_configs.allowed_models, provisioned at run",
+    "start by orchestrator/gateway.py; a non-pinned model gets a 403 model_blocked.",
+    "",
+    "Provider keys are read from the environment and never inlined. `bench gateway start`",
+    "reads this file for the `env.*` names it references and reports any that are unset, by",
+    "name only — so a missing credential surfaces before a run rather than as a 401 mid-judge.",
+    "",
+    "A provider is a base URL plus a credential, so a pinned model does not have to be an",
+    "OpenAI one. Any OpenAI-compatible endpoint (vLLM, TGI, Ollama, Together, Groq,",
+    "OpenRouter, a private deployment) becomes a provider by adding a block with",
+    "network_config.base_url and custom_provider_config.base_provider_type: openai.",
+    "Field names verified against core/schemas/provider.go, not from the docs site.",
+    "",
+    "One provider block per endpoint. The models listed on a key are what that key may",
+    "reach; the suite pins which (provider, id) pairs a run is allowed to use at all.",
+    "",
+    "The two blocks below cover suites v1 and v2 (all `openai`) and LoCoMo-Refined's",
+    "official_judge (`qwen3-14b` on `vllm`). Suites v3 and v4 pin every model against a",
+    "private OpenAI-compatible deployment, which is deliberately absent here: add your own",
+    "block, name it in the suite, and note that changing a provider is a suite version bump",
+    "(ARCH §6.1) because the endpoint is part of the pinned environment."
+  ],
+  "providers": {
+    "openai": {
+      "keys": [
+        {
+          "value": "env.OPENAI_API_KEY",
+          "models": ["gpt-4o-mini", "gpt-4.1-mini", "text-embedding-3-small"],
+          "weight": 1.0
+        }
+      ]
+    },
+    "vllm": {
+      "_comment": [
+        "Serves LoCoMo-Refined's official judge (qwen3-14b), which no OpenAI endpoint has.",
+        "`vllm` is a first-class Bifrost provider, so the endpoint is per-key under",
+        "vllm_key_config.url — a SecretVar, hence env.* works and the URL never sits in",
+        "this file. Prefer this over a custom provider: one key per instance also gives",
+        "round-robin across replicas, keyed on model_name.",
+        "",
+        "For an endpoint that is not vLLM/Ollama, add a custom provider instead:",
+        "  network_config.base_url (a plain string — NO env.* substitution here, so an",
+        "    env.FOO is sent verbatim and the request silently goes nowhere)",
+        "  custom_provider_config.base_provider_type: openai",
+        "  custom_provider_config.is_key_less: true for an unauthenticated endpoint",
+        "  custom_provider_config.request_path_overrides when it does not serve",
+        "    /v1/chat/completions",
+        "",
+        "base_url carries NO /v1 suffix. Bifrost appends the version prefix itself, so a",
+        "/v1 here resolves to /v1/v1/chat/completions and 404s on the first call.",
+        "",
+        "Models are listed explicitly rather than as [\"*\"]. A wildcard would make every",
+        "virtual key's allowed_models unenforceable, which is the D11 bug."
+      ],
+      "keys": [
+        {
+          "value": "env.VLLM_API_KEY",
+          "models": ["qwen3-14b"],
+          "weight": 1.0,
+          "vllm_key_config": {
+            "url": "env.VLLM_BASE_URL",
+            "model_name": "qwen3-14b"
+          }
+        }
+      ],
+      "network_config": {
+        "default_request_timeout_in_seconds": 600
+      }
+    }
+  },
+  "governance": {
+    "enable_governance": true,
+    "enable_virtual_keys": true
+  },
+  "telemetry": {
+    "enable_prometheus": true,
+    "prometheus_path": "/metrics",
+    "custom_dimensions": ["run", "phase"]
+  },
+  "client": {
+    "drop_excess_requests": false
+  }
+}

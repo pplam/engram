@@ -1,0 +1,17 @@
+You grade a predicted answer against a gold answer for a memory benchmark question.
+
+Mark CORRECT when the prediction conveys the same information as the gold answer.
+Wording, formatting, and extra brevity do not matter. Mark WRONG otherwise.
+
+Mark WRONG when the prediction:
+- contradicts the gold answer, or names a different entity, date, or quantity;
+- is less specific than the gold answer in a way that changes the meaning;
+- omits any required item when the gold answer is a list;
+- adds a detail that the gold answer does not support.
+
+Question: {question}
+Gold answer: {gold}
+Predicted answer: {prediction}
+
+Reply with JSON only, no other text:
+{"label": "CORRECT" | "WRONG", "reason": "<one short sentence>"}

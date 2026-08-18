@@ -1,0 +1,36 @@
+# LoCoMo-Refined (D1): 10 long multi-session conversations, 1986 QA pairs.
+#
+# LICENCE: CC BY-NC 4.0 — non-commercial. Check before publishing any row derived
+# from this dataset.
+#
+# "Refined" is the scoring definition, not a different corpus: the source file is
+# upstream `locomo10.json`, and what makes it refined is the pinned judge plus the
+# stricter answer prompt below (86.33% human agreement vs 43.67% for the original
+# setup — ARCH §15.1). Omit either and the numbers are not the official metric.
+name: locomo-refined
+version: "1.0"
+source:
+  path: data/locomo10.json
+  sha256: 79fa87e90f04081343b8c8debecb80a9a6842b76a7aa537dc9fdf651ea698ff4
+  url: https://raw.githubusercontent.com/snap-research/locomo/main/data/locomo10.json
+task_type: open_qa
+scorer: judge_binary
+supports_recall: true
+# `dia_id` names one turn, so evidence is message-granular.
+evidence_granularity: message
+official_prompt: prompts/answer.txt
+# The stricter answer prompt above is kept; the judge is NOT upstream's.
+#
+# Upstream LoCoMo-Refined pins Qwen3-14B, and that judge plus that prompt is what the
+# 86.33% human-agreement figure was measured with. We serve the judge from the `proxy`
+# endpoint instead, because that is the deployment this benchmark actually has and a
+# second endpoint existing only for one dataset's judge is not worth its upkeep.
+#
+# THE CONSEQUENCE, STATED PLAINLY: a quality number from this dataset is no longer
+# upstream's official metric, and must not be published as one. Agreement against human
+# labels has not been remeasured for this judge. Retrieval metrics are unaffected — they
+# involve no judge at all.
+official_judge:
+  id: zai-org/glm-5.2
+  provider: proxy
+  temperature: 0

@@ -1,0 +1,71 @@
+[project]
+name = "engram"
+version = "0.1.0"
+description = "Black-box benchmark for memory systems"
+requires-python = ">=3.12"
+dependencies = [
+    "httpx==0.28.1",
+    "pydantic==2.11.7",
+    "pyyaml==6.0.2",
+]
+
+[project.scripts]
+bench = "orchestrator.cli:main"
+
+[dependency-groups]
+dev = [
+    "pytest==8.4.1",
+    "pytest-asyncio==1.1.0",
+    "mypy==1.17.0",
+    "ruff==0.12.5",
+    "types-pyyaml==6.0.12.20250516",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["orchestrator"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests", "contract/conformance"]
+asyncio_mode = "auto"
+addopts = "-q --strict-markers"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM", "PTH", "RET", "ARG", "C4", "ASYNC"]
+
+[tool.ruff.lint.per-file-ignores]
+# Test doubles must match the signature they replace, unused args included. ARG002 joins
+# the list now that the integration surface is a Protocol: a fake `search` has to accept
+# `top_k` to satisfy `MemoryAdapter` whether or not that particular test looks at it.
+"tests/**" = ["ARG001", "ARG002", "ARG005"]
+# `no_memory` ignores everything it is given — that *is* the baseline — and every
+# conformance check takes `(adapter, run_id)` so they can share one signature.
+"reference/baselines/adapters.py" = ["ARG002"]
+"contract/conformance/checks.py" = ["ARG001"]
+# Every scorer shares one signature so datasets can select by name; each uses a
+# different subset of the arguments.
+"scorers/quality.py" = ["ARG001"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+warn_unreachable = true
+disallow_any_explicit = false
+# Every dataset plugin is a directory holding an `adapter.py`, and the directories are
+# named with hyphens, so they cannot be packages and every `adapter` collides as a module
+# name. They are never imported as modules — `load_dataset` reads them by path — so they
+# are excluded from the recursive walk and type-checked individually by `make types`
+# instead. Excluding them silently would leave them unchecked, which is how the fixture
+# adapters went unchecked before.
+# `systems/` holds the checkouts of the systems under benchmark (see .gitignore). It is
+# upstream's code, not ours to type-check, and walking it fails outright: mem0 ships two
+# modules named `telemetry`, which is a hard error rather than a warning. Ruff needs no
+# equivalent entry because it honours .gitignore and mypy does not.
+exclude = ['(datasets|tests/datasets/fixtures)/[^/]+/adapter\.py$', '^systems/']

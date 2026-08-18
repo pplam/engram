@@ -1,0 +1,39 @@
+# The self-hosted mem0 server, benchmarked through `adapters/mem0.py`.
+#
+# mem0 runs as its own stack (FastAPI + Postgres/pgvector), started before the run:
+#
+#   uv run python -m scripts.setup_mem0 --clone
+#
+# That clones into `systems/mem0/` (git-ignored), renders mem0's config from the suite, and
+# starts it. See the comment on model pinning below for why a script has to exist at all.
+#
+# Check it before spending money on a run:
+#   uv run bench doctor mem0
+#
+# Port 8888 is what mem0's docker-compose publishes (8888 → 8000 in the container).
+#
+# NO `api_key_env` HERE, because the stack runs with AUTH_DISABLED=true. Turn auth on
+# and this entry gains one line naming the *variable* holding the key, never the key:
+#   api_key_env: MEM0_SERVER_API_KEY
+#
+# MODEL PINNING IS NOT EXPRESSIBLE FROM THIS FILE. The server reads its own LLM and
+# embedder config from its `.env` and from `POST /configure`, so pointing mem0 at the
+# gateway is a step you take against the server, not something the registry can state.
+# See docs/ARCHITECTURE.md §3 on why that matters, and note the server's DEFAULT_CONFIG
+# hardcodes temperature 0.2 where suite v3 pins 0.
+#
+# `scripts/setup_mem0.py` is that step, rendered from `suites/<version>.yaml` rather than
+# retyped. Its tests check the rendering — that the ids, width, and temperature sent to
+# mem0 are the suite's — which is as far as a test here reaches. Whether the *running*
+# server still holds that config is what `verify` answers, from gateway traffic.
+#
+# The pin is detected, not enforced. An internal network for mem0 would make the gateway
+# its only route out, but Docker cannot publish a port for a container whose every network
+# is internal, and the harness dials mem0 on 127.0.0.1 from the host. So mem0 keeps its
+# egress, and a bypass shows up in `verify` as a phase with zero gateway traffic rather
+# than being impossible. ARCH §3.3's stronger container guarantee is available to a system
+# the harness reaches in-network; it is not what this entry uses.
+name: mem0
+adapter: adapters.mem0:Mem0Adapter
+config:
+  base_url: http://127.0.0.1:8888

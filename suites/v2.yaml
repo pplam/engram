@@ -1,0 +1,44 @@
+# The pinned world, second version (ARCH §6, §6.1; D11).
+#
+# Immutable, like v1: changing any value below requires a new suite version, because
+# every published report carries the version it was produced under. v1 is not edited
+# for the same reason — it stays exactly as the rows published under it saw it.
+#
+# Two changes from v1, both of which alter what a row means:
+#
+#   - Every pinned model is `(provider, id)`. A provider names a block in
+#     `gateway/bifrost.json` — a base URL plus a credential — which is what lets a suite
+#     pin a model no OpenAI endpoint serves. A bare id also restricts nothing on a
+#     multi-provider gateway, so pinning was never actually enforced without it.
+#   - `limits.retry_on` / `no_retry_on` are gone. Retry is keyed on the exception type an
+#     adapter raises (`AdapterError` retries, `ContractViolation` never does), so a
+#     status list cannot express the policy for an adapter that never speaks HTTP.
+#
+# The judge here is a default — both first datasets pin an official_judge that
+# overrides it (D7), and that dataset judge names its own provider for the same reason.
+suite: v2
+
+models:
+  chat: {id: gpt-4o-mini, provider: openai, temperature: 0, seed: 7}
+  embedding: {id: text-embedding-3-small, provider: openai, dimensions: 1536}
+  judge: {id: gpt-4.1-mini, provider: openai, temperature: 0}
+
+retrieval:
+  top_k: 100
+
+chunking:
+  max_messages_per_chunk: 20
+  max_words_per_chunk: 2000
+  boundary: message_or_sentence
+
+prompts:
+  answer:
+    ref: prompts/answer/v1.txt
+    sha256: 1c0550c00a90b4c97299afca8ad5452d972c8db07fb44fc5deeabffa814f9a32
+  judge:
+    ref: prompts/judge/v1.txt
+    sha256: 85bedcf0b79c0fea1fb0ec3f69a613f891acecff577ca4c014da373869fb48e9
+
+limits:
+  ingest: {workers: 16, timeout_s: 1200, attempts: 6}
+  retrieve: {workers: 8, timeout_s: 1200, attempts: 6}

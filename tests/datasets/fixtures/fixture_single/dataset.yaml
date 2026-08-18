@@ -1,0 +1,16 @@
+# LongMemEval-shaped fixture: one private haystack per question, session-level
+# evidence, and its own pinned judge and answer prompt (exercises D7).
+name: fixture_single
+version: "1.0"
+source:
+  path: data/corpus.json
+  sha256: 174382e69d54d932a16b815e6988ecb4af7971e9db4a67c76ef17e3e340a11dc
+task_type: open_qa
+scorer: judge_binary
+supports_recall: true
+evidence_granularity: session
+official_prompt: prompts/answer.txt
+official_judge:
+  id: qwen3-14b
+  provider: vllm
+  temperature: 0

@@ -1,0 +1,10 @@
+# LoCoMo-shaped fixture: ~many questions per context, message-level evidence.
+name: fixture_many
+version: "1.0"
+source:
+  path: data/corpus.json
+  sha256: e5f9d6a591fb9955aeb05e4ad011dd5742050732d831ebaa52765a0ef6237a06
+task_type: open_qa
+scorer: judge_binary
+supports_recall: true
+evidence_granularity: message

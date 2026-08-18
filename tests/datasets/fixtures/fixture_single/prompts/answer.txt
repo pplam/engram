@@ -1,0 +1,8 @@
+Answer the question from the memories below. Reply with the shortest exact answer.
+
+Memories:
+{memories}
+
+Question: {question}
+
+Answer:

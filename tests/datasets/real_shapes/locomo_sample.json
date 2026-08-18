@@ -1,0 +1,89 @@
+[
+  {
+    "sample_id": "conv-26",
+    "conversation": {
+      "speaker_a": "Caroline",
+      "speaker_b": "Melanie",
+      "session_1": [
+        {
+          "speaker": "Caroline",
+          "dia_id": "D1:1",
+          "text": "Hey Mel! Good to see you! How have you been?"
+        },
+        {
+          "speaker": "Melanie",
+          "dia_id": "D1:2",
+          "text": "Hey Caroline! Good to see you! I'm swamped with the kids & work. What's up with you? Anything new?"
+        },
+        {
+          "speaker": "Caroline",
+          "dia_id": "D1:3",
+          "text": "I went to a LGBTQ support group yesterday and it was so powerful."
+        },
+        {
+          "speaker": "Melanie",
+          "dia_id": "D1:4",
+          "text": "Wow, that's cool, Caroline! What happened that was so awesome? Did you hear any inspiring stories?"
+        }
+      ],
+      "session_1_date_time": "1:56 pm on 8 May, 2023",
+      "session_2": [
+        {
+          "speaker": "Melanie",
+          "dia_id": "D2:1",
+          "text": "Hey Caroline, since we last chatted, I've had a lot of things happening to me. I ran a charity race for mental health last Saturday \u2013 it was really rewarding. Really made me think about taking care of our minds."
+        },
+        {
+          "speaker": "Caroline",
+          "dia_id": "D2:2",
+          "text": "That charity race sounds great, Mel! Making a difference & raising awareness for mental health is super rewarding - I'm really proud of you for taking part!"
+        },
+        {
+          "speaker": "Melanie",
+          "dia_id": "D2:3",
+          "text": "Thanks, Caroline! The event was really thought-provoking. I'm starting to realize that self-care is really important. It's a journey for me, but when I look after myself, I'm able to better look after my family."
+        },
+        {
+          "speaker": "Caroline",
+          "dia_id": "D2:4",
+          "text": "I totally agree, Melanie. Taking care of ourselves is so important - even if it's not always easy. Great that you're prioritizing self-care."
+        }
+      ],
+      "session_2_date_time": "1:14 pm on 25 May, 2023"
+    },
+    "qa": [
+      {
+        "question": "When did Caroline go to the LGBTQ support group?",
+        "answer": "7 May 2023",
+        "evidence": [
+          "D1:3"
+        ],
+        "category": 2
+      },
+      {
+        "question": "When did Melanie run a charity race?",
+        "answer": "The sunday before 25 May 2023",
+        "evidence": [
+          "D2:1"
+        ],
+        "category": 2
+      },
+      {
+        "question": "What did the charity race raise awareness for?",
+        "answer": "mental health",
+        "evidence": [
+          "D2:2"
+        ],
+        "category": 4
+      },
+      {
+        "question": "What did Caroline realize after her charity race?",
+        "evidence": [
+          "D2:3"
+        ],
+        "category": 5,
+        "adversarial_answer": "self-care is important"
+      }
+    ]
+  }
+]

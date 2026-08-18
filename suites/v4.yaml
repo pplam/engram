@@ -1,0 +1,62 @@
+# The pinned world, fourth version (ARCH §6, §6.1; D11).
+#
+# Immutable, like v1–v3: changing any value below requires a new suite version,
+# because every published report carries the version it was produced under.
+#
+# One change from v3: `models.chat` pins `max_tokens`. v3 pinned none, so each system
+# under test applied its own default — mem0's is 2000 — and the pinned chat model is a
+# reasoning model that spends that entire budget on reasoning before emitting any
+# content. The extraction call then returns an empty completion, mem0 parses it as "no
+# facts", stores nothing, and answers HTTP 200. A v3 mem0 run therefore ingests chunks
+# that were never stored and scores them as retrieval misses. The budget has to be part
+# of the pinned world for the same reason temperature is: it changes what a row means.
+#
+# 8000 sits above the observed reasoning cost of an extraction call on a 20-message
+# chunk (~2000–2600 completion tokens, most of it reasoning) with room for longer
+# chunks, and is not so large that a runaway completion goes unbilled.
+#
+# Carried over from v3: every model is on the `proxy` provider — a single
+# OpenAI-compatible endpoint serving both the chat/judge models and the embedder, so the
+# separate `openai` and `vllm` blocks are not needed. `openai` and `vllm` stay in
+# gateway/bifrost.json regardless, because rows published under v1 and v2 name them and
+# must stay reproducible.
+#
+# The judge is still a *different model* from the answer model, not a second alias for
+# the same one. One endpoint is an operational convenience; one model would let the judge
+# grade its own output, which is the confound ARCH §14 pins a separate judge to close.
+#
+# LoCoMo-Refined still declares its own `official_judge` and still overrides this one per
+# D7 — but it now names this same judge on `proxy` rather than qwen3-14b on vllm, so no
+# v4 run needs the vllm endpoint. That override is no longer upstream's judge, which
+# means a LoCoMo quality number under v4 is not upstream's official metric; the dataset
+# file states that where anyone reading the pin will see it.
+suite: v4
+
+# The fast model answers; the stronger model judges. Judging is the decision that becomes
+# the published accuracy column, so it gets the better model — a misjudgement is
+# unrecoverable from artifacts, whereas answer quality is the thing being measured and is
+# meant to vary. They must stay different models either way (ARCH §14).
+models:
+  chat: {id: deepseek/deepseek-v4-flash-0731, provider: proxy, temperature: 0, seed: 7, max_tokens: 8000}
+  embedding: {id: qwen/qwen3-embedding-8b, provider: proxy, dimensions: 4096}
+  judge: {id: zai-org/glm-5.2, provider: proxy, temperature: 0}
+
+retrieval:
+  top_k: 100
+
+chunking:
+  max_messages_per_chunk: 20
+  max_words_per_chunk: 2000
+  boundary: message_or_sentence
+
+prompts:
+  answer:
+    ref: prompts/answer/v1.txt
+    sha256: 1c0550c00a90b4c97299afca8ad5452d972c8db07fb44fc5deeabffa814f9a32
+  judge:
+    ref: prompts/judge/v1.txt
+    sha256: 85bedcf0b79c0fea1fb0ec3f69a613f891acecff577ca4c014da373869fb48e9
+
+limits:
+  ingest: {workers: 16, timeout_s: 1200, attempts: 6}
+  retrieve: {workers: 8, timeout_s: 1200, attempts: 6}

@@ -1,0 +1,66 @@
+# Egress policy (§3.3): a system under test reaches the gateway and nothing else.
+#
+# Two networks do the work. `models` is internal, so containers attached to it have no
+# route off the host — a system can resolve the gateway and no provider. Only the
+# gateway itself sits on `egress`, which is the single hole through which model traffic
+# leaves. That is what makes "all model calls are metered" a property of the network
+# rather than a promise in a README.
+#
+# The orchestrator runs on the host and talks to both over published ports.
+
+services:
+  gateway:
+    image: maximhq/bifrost:latest
+    # No `command:`. The image's entrypoint recognizes only --port/--host, and its
+    # fallback branch re-appends any other argument to the tail of the list, so `$#`
+    # never drains and `exec /app/main` is never reached. A `-config <path>` pair is
+    # enough to hang it: the container reports `Up`, logs nothing, pegs a core, and
+    # listens on no port. There is no config flag to pass anyway — the entrypoint
+    # execs `/app/main -app-dir "$APP_DIR" ...`, and Bifrost reads its config from
+    # $APP_DIR/config.json, which is why the mount target below is that exact path.
+    volumes:
+      - ./bifrost.json:/app/data/config.json:ro
+    environment:
+      # Provider credentials are passed through from the host environment; the config
+      # references them by name so no key is ever written to a file. One entry per
+      # provider block in bifrost.json — `bench gateway start` checks the same set before
+      # starting, so a missing one is named up front rather than 401ing mid-run.
+      - OPENAI_API_KEY
+      - PROXY_API_KEY
+      - VLLM_API_KEY
+      - VLLM_BASE_URL
+    ports:
+      - "127.0.0.1:8080:8080"
+    networks:
+      - models
+      - egress
+
+  # A system under test joins `models` only. Template — one service per registered
+  # system, image digest pinned so a row can name what it measured.
+  # Defaults rather than required-variable guards: compose interpolates every service in
+  # the file even when the command names one, so a guard here aborts
+  # `up -d gateway` over a variable the gateway never uses. Benchmarking a real system
+  # means setting both — an unset SUT_IMAGE fails loudly at `up`, since no such image
+  # exists to pull.
+  system_under_test:
+    profiles: ["manual"]
+    image: "${SUT_IMAGE:-set-SUT_IMAGE-to-a-digest-pinned-image}"
+    environment:
+      # The run-scoped virtual key (D6(a)). One key for the whole run: a black box gets
+      # one env var at container start and cannot take a phase-scoped key.
+      #
+      # Its allowed_models is what pins the system's LLM *and* embedder: an id the suite
+      # does not pin gets a 403 from the gateway, and the internal `models` network means
+      # there is no other endpoint to fall back to.
+      - MODEL_BASE_URL=http://gateway:8080/v1
+      - MODEL_API_KEY=${SUT_VIRTUAL_KEY:-}
+    ports:
+      - "127.0.0.1:8090:8090"
+    networks:
+      - models
+
+networks:
+  models:
+    internal: true
+  egress:
+    driver: bridge

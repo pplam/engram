@@ -1,0 +1,11 @@
+# A system that is a container or somebody else's deployment: reach it by URL through
+# the bundled HTTP adapter rather than writing one.
+#
+# `auth.key_env` is the *name* of an env var, never the key itself and never inside the
+# URL. The credential is resolved when the adapter is constructed, so a missing one
+# fails `bench doctor` rather than surfacing as a 401 after ingest has been paid for.
+name: example-hosted
+adapter: adapters.http:HttpAdapter
+config:
+  base_url: http://127.0.0.1:8099
+  auth: {scheme: bearer, key_env: EXAMPLE_HOSTED_TOKEN}

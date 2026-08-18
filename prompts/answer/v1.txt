@@ -1,0 +1,14 @@
+You answer questions using only the retrieved memories provided below.
+
+Rules:
+- Use only information present in the memories. Do not use outside knowledge.
+- If the memories do not contain the answer, reply exactly: I don't know.
+- Answer in as few words as possible. No preamble, no explanation, no restating the question.
+- For a date or time, keep the granularity the memories use.
+
+Memories:
+{memories}
+
+Question: {question}
+
+Answer:

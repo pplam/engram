@@ -1,0 +1,26 @@
+{
+  "conversations": [
+    {
+      "sample_id": "conv1",
+      "messages": [
+        {"role": "user", "content": "I adopted a tabby cat named Mochi in March 2024.", "timestamp": 1709251200000},
+        {"role": "assistant", "content": "Mochi sleeps on the windowsill every afternoon.", "timestamp": 1709337600000},
+        {"role": "user", "content": "I moved to Lisbon in June 2024 and took Mochi with me.", "timestamp": 1717200000000}
+      ]
+    },
+    {
+      "sample_id": "conv2",
+      "messages": [
+        {"role": "user", "content": "My sister Ana started a bakery in Porto last winter.", "timestamp": 1704067200000},
+        {"role": "assistant", "content": "Ana's bakery is known for pastel de nata.", "timestamp": 1704153600000}
+      ]
+    }
+  ],
+  "questions": [
+    {"qa_id": "q1", "sample_id": "conv1", "question": "What is the name of the cat?", "answer": ["Mochi"], "evidence_messages": ["m0"], "category": "single-hop"},
+    {"qa_id": "q2", "sample_id": "conv1", "question": "When was the cat adopted?", "answer": ["March 2024"], "evidence_messages": ["m0"], "category": "temporal"},
+    {"qa_id": "q3", "sample_id": "conv1", "question": "Where does the cat sleep?", "answer": ["on the windowsill"], "evidence_messages": ["m1"], "category": "single-hop"},
+    {"qa_id": "q4", "sample_id": "conv2", "question": "Who started a bakery?", "answer": ["Ana", "the user's sister Ana"], "evidence_messages": ["m0"], "category": "single-hop"},
+    {"qa_id": "q5", "sample_id": "conv1", "question": "Which city did the user move to?", "answer": ["Lisbon"], "evidence_messages": ["m2"], "category": "single-hop", "options": ["A. Lisbon", "B. Berlin"]}
+  ]
+}

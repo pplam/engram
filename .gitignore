@@ -1,0 +1,45 @@
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+dist/
+build/
+
+# run outputs — publishable bundles are copied out, never committed from here
+artifacts/
+
+# dataset corpora: fetched, not vendored. `dataset.yaml` pins a sha256 and a url, so the
+# file is verifiable without living in git — and LoCoMo-Refined is CC BY-NC 4.0, which we
+# should not redistribute. `datasets/*/data/` is populated by `scripts/fetch_datasets.py`.
+datasets/*/data/
+
+# checkouts of the systems under benchmark, one directory per system, populated by
+# `scripts/setup_mem0.py` and its equivalents. Upstream's code under upstream's licence,
+# fetched from its own remote for the same reason the corpora are. The generated `.env`
+# and compose override live in here too: they are a rendering of a suite, and the suite is
+# what belongs in git.
+systems/
+
+# secrets: gateway virtual keys, system tokens
+.env
+*.env
+.env.*
+!.env.example
+!example.env
+
+# the operator's gateway config: provider credentials and private endpoint hosts. Only
+# `keys[].value` and `vllm_key_config.url` resolve `env.*`, so a custom provider's
+# `network_config.base_url` is necessarily a literal host — which makes this file
+# deployment-specific even when every credential is referenced properly.
+# `gateway/bifrost.example.json` is the tracked template; copy it and add your providers.
+gateway/bifrost.json
+
+# editor scratch files. A swap file of a config holds whatever was in the buffer,
+# credentials included, and nobody reviews one in a diff.
+*.swp
+*.swo
+*~
+.DS_Store

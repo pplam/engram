@@ -1,0 +1,33 @@
+# The pinned world. One file, one source of truth (ARCH §6).
+#
+# Immutable: changing any value below requires a new suite version, because every
+# published report carries the version it was produced under. The judge here is a
+# default — both first datasets pin an official_judge that overrides it (D7).
+suite: v1
+
+models:
+  chat: {id: gpt-4o-mini, temperature: 0, seed: 7}
+  embedding: {id: text-embedding-3-small, dimensions: 1536}
+  judge: {id: gpt-4.1-mini, temperature: 0}
+
+retrieval:
+  top_k: 100
+
+chunking:
+  max_messages_per_chunk: 20
+  max_words_per_chunk: 2000
+  boundary: message_or_sentence
+
+prompts:
+  answer:
+    ref: prompts/answer/v1.txt
+    sha256: 1c0550c00a90b4c97299afca8ad5452d972c8db07fb44fc5deeabffa814f9a32
+  judge:
+    ref: prompts/judge/v1.txt
+    sha256: 85bedcf0b79c0fea1fb0ec3f69a613f891acecff577ca4c014da373869fb48e9
+
+limits:
+  ingest: {workers: 16, timeout_s: 1200, attempts: 6}
+  retrieve: {workers: 8, timeout_s: 1200, attempts: 6}
+  retry_on: [408, 409, 425, 429, 500, 501, 502, 503, 504]
+  no_retry_on: [400, 401, 403, 404, 422]
